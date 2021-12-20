@@ -722,8 +722,19 @@ _:-ms-fullscreen,
     border-radius: 2px;
 }
 
+.modal__form-send[disabled] {
+    background-color: #958384;
+    border: 1px solid #8b797a;
+}
+
 .modal__form-send:hover {
     background-color: #c34b50;
+}
+
+.modal__form-send[disabled]:hover {
+    background-color: #958384;
+    border: 1px solid #8b797a;
+    cursor: unset;
 }
 
 .modal__form-policy {
@@ -799,6 +810,17 @@ _:-ms-fullscreen,
 
 .modal__link-policy a:hover {
     color: #c34b50;
+}
+
+.modal__form-info {
+    background: #fff;
+    width: 100%;
+    padding: 16px;
+    border: 1px solid #D7D7D7;
+    border-radius: 2px;
+    box-sizing: border-box;
+    color: #fff;
+    display: none;
 }
 
 /* Анимации */

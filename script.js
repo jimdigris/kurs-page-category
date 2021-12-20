@@ -1,5 +1,4 @@
 'use strict';
-console.log('script-load');
 // разворачивание фильтров на десктопе
 (function () {
     const filters = document.querySelector('#filters');
@@ -94,7 +93,7 @@ console.log('script-load');
             let titleFilter = filterOne.querySelector(classes.titleFilter);
             // ищем блок с инпутами-чекбоксами фильтра, соответствующий этому заголовку
             let inputs = filterOne.querySelector(classes.inputsFilter);
-            // вешаем обработчик обытия клика по заголовку
+            // вешаем обработчик события клика по заголовку
             titleFilter.addEventListener('click', (function () { changeFilterSize(inputs, titleFilter); }));
         });
 
@@ -164,3 +163,112 @@ console.log('script-load');
         }
     }
 })();
+
+// закрывает всплывающее окно по клику вне его
+(function () {
+    const modals = Array.from(document.querySelectorAll('.modal'));
+    modals.forEach(modal => {
+        modal.querySelector('.modal__body-child').addEventListener('click', (evt) => { evt.stopPropagation(); });
+        modal.querySelector('.modal__body-parent').addEventListener('click', () => { modal.querySelector('.modal__close-in').click(); })
+    });
+})();
+
+// делает не активной кнопку Отправить, если нет галочки в политике перс данных
+(function () {
+    const modals = Array.from(document.querySelectorAll('.modal'));
+    modals.forEach(modal => {
+        let button = modal.querySelector('.modal__form-send');
+        let checkbox = modal.querySelector('.modal__form-policy').querySelector('input');
+        let labelPolicy = modal.querySelector('.modal__form-label-policy');
+        let chekPolicy = modal.querySelector('.modal__form-chek-policy');
+
+        if ((button) && (checkbox) && (labelPolicy) && (chekPolicy)) {
+            labelPolicy.addEventListener('click', () => { changeButtonState(checkbox, button); });
+            chekPolicy.addEventListener('click', () => { changeButtonState(checkbox, button); });
+        }
+    });
+
+    function changeButtonState(checkbox, button) {
+        if (checkbox.checked) {
+            button.disabled = 'true';
+        } else {
+            button.removeAttribute('disabled');
+        }
+    }
+})();
+
+// подмена заголовка - для рекламных ссылок
+(function () {
+    let paramsString = document.location.search;
+    let searchParams = new URLSearchParams(paramsString);
+
+    if (searchParams.has('ad_title')) {
+        let value = searchParams.get('ad_title');
+        if (value.length > 0) { replaceHeader(value); }
+    }
+
+    function replaceHeader(value) {
+        let title = document.querySelector('#ad-title');
+        if (title) { title.textContent = value; }
+    }
+})();
+
+// отправка формы обратной связи на почту
+function send(event, php, idModal) {
+    event.preventDefault ? event.preventDefault() : event.returnValue = false;
+    let formInfo = document.querySelector(`.${idModal}`);
+    showInformation(formInfo, 'expectation');
+
+    let req = new XMLHttpRequest();
+    req.open('POST', php, true);
+    req.onload = function () {
+        if (req.status >= 200 && req.status < 400) {
+            let json = JSON.parse(this.response);
+
+            // ЗДЕСЬ УКАЗЫВАЕМ ДЕЙСТВИЯ В СЛУЧАЕ УСПЕХА ИЛИ НЕУДАЧИ
+            if (json.result == "success") {
+                // Если сообщение отправлено
+                showInformation(formInfo, 'success');
+            } else {
+                // Если произошла ошибка
+                showInformation(formInfo, 'error');
+            }
+            // Если не удалось связаться с php файлом
+        } else {
+            showInformation(formInfo, 'error');
+        }
+    };
+
+    // Если не удалось отправить запрос. Стоит блок на хостинге
+    req.onerror = function () { alert("Ошибка отправки запроса"); };
+    req.send(new FormData(event.target));
+    event.target.reset();
+
+    // выведем информацию об отправке
+    function showInformation(formInfo, sendStatus) {
+        if (formInfo) {
+            formInfo.style.display = 'block';
+            let color, text;
+
+            switch (sendStatus) {
+                case 'expectation':
+                    color = '#cd8f4f';
+                    text = 'Отправка сообщения.';
+                    break;
+
+                case 'success':
+                    color = '#62c169';
+                    text = 'Сообщение отправлено.';
+                    break;
+
+                case 'error':
+                    color = '#e97474';
+                    text = 'Сообщение не отправлено. Свяжитесь пожалуйста с нами другим способом.';
+                    break;
+            }
+
+            formInfo.style.backgroundColor = color;
+            formInfo.textContent = text;
+        }
+    }
+}
